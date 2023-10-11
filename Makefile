@@ -40,6 +40,7 @@ QSO-fluxes.fits: convert_QSOs.py QSO-orig.fits
 
 chimeras-list.txt: build_chimeras.py input-gal_converted.fits QSO-fluxes.fits
 	# build all possible chimera combinations
+	mkdir -p chimeras/
 	python3 $^ $@
 
 chimeras-full.fits: chimeras-list.txt
