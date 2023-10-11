@@ -56,14 +56,16 @@ chimeras-deduplicated.fits: chimeras-deduplicated-ids.fits
 		ocmd='delcols "id_dedup"'
 
 chimeras-fullQinfo.fits: chimeras-deduplicated.fits QSO-fluxes.fits
-	stilts tmatch2 out=$@ matcher=exact find=best join=all1 fixcols=all \
+	stilts tmatch2 out=$@ matcher=exact find=best1 join=all1 fixcols=all \
 		in1=chimeras-deduplicated.fits values1=ID_SDSS suffix1='' \
 		in2=QSO-fluxes.fits values2=SDSS suffix2='_QSO' \
+		ocmd='delcols "GroupSize GroupID"'
 
 chimeras-fullinfo.fits: chimeras-fullQinfo.fits input-gal_converted.fits
-	stilts tmatch2 out=$@ matcher=exact find=best join=all1 fixcols=all \
+	stilts tmatch2 out=$@ matcher=exact find=best1 join=all1 fixcols=all \
 		in1=chimeras-fullQinfo.fits values1=ID_COSMOS suffix1= \
-		in2=input-gal_converted.fits values2=id suffix2=_GAL 
+		in2=input-gal_converted.fits values2=id suffix2=_GAL \
+		ocmd='delcols "GroupSize GroupID"'
 
 chimeras-grahsp.fits: chimeras-deduplicated.fits
 	cp $^ $@

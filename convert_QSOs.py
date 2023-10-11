@@ -5,8 +5,8 @@ import sys
 from astropy.table import Table
 
 def ab_flux(ABmag):
-    """convert AB magnitude to flux in uJy"""
-    return (10**(23-(((ABmag)+48.6)/2.5))) * 1000000
+    """convert AB magnitude to flux in mJy"""
+    return (10**(23-(((ABmag)+48.6)/2.5))) * 1000
 
 def magerr2fluxerr(mag, magerr):
     """convert the lower (brighter) magnitude to flux, return the deviation in flux."""
