@@ -19,7 +19,7 @@ y = np.log10(galc['IRAC4']/galc['IRAC2'])
 
 xy = np.logical_and(x>=0.08, y>=0.15)
 yy = np.logical_and(y>=(1.21*x)-0.27, y<=(1.21*x)+0.27)
-num = np.logical_and(x, y)
+num = np.logical_and(xy, yy)
 
 r1 = np.logical_and(galc['IRAC1']<galc['IRAC2'], galc['IRAC2']<galc['IRAC3'])
 ref = np.logical_and(r1, galc['IRAC3']<galc['IRAC4'])
