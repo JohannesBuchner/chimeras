@@ -22,8 +22,8 @@ dataQ = Table.read(sys.argv[1])
 print("Quasar input catalog:", len(dataQ))
 # convert magnitudes to fluxes, including errors
 dataQ["u_sdss"], dataQ["u_sdss_err"] = convert_flux_and_err_where_measured(dataQ['umag0'], dataQ['e_umag'])
-dataQ["r_sdss"], dataQ["r_sdss_err"] = convert_flux_and_err_where_measured(dataQ['imag0'], dataQ['e_imag'])
-dataQ["i_sdss"], dataQ["i_sdss_err"] = convert_flux_and_err_where_measured(dataQ['rmag0'], dataQ['e_rmag'])
+dataQ["r_sdss"], dataQ["r_sdss_err"] = convert_flux_and_err_where_measured(dataQ['rmag0'], dataQ['e_rmag'])
+dataQ["i_sdss"], dataQ["i_sdss_err"] = convert_flux_and_err_where_measured(dataQ['imag0'], dataQ['e_imag'])
 dataQ["z_sdss"], dataQ["z_sdss_err"] = convert_flux_and_err_where_measured(dataQ['zmag0'], dataQ['e_zmag'])
 
 dataQ["J_2mass"], dataQ["J_2mass_err"] = convert_flux_and_err_where_measured(dataQ['Jmag']+0.91, dataQ['e_Jmag'])
