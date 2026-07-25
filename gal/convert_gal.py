@@ -137,7 +137,7 @@ for l in open('filternames.txt'):
 	EBV = f[1].data['EBV']
 	# these are in uJy, convert to mJy
 	# Apply E(B-V) from Milky Way 
-	newvalues = flux * 0.001 * 10**(-0.4 * EBVfactor * EBV)
+	newvalues = flux * 0.001 * 10**(0.4 * EBVfactor * EBV)
 	newvalues[bad] = -9999
 	newcolumns.append(pyfits.Column(name=filtername,format='E',array=newvalues, unit='mJy'))
 	#f[1].data[c] *= 0.001 * 10**(-0.4 * EBVfactor * EBV)
@@ -147,7 +147,7 @@ for l in open('filternames.txt'):
 	filternames.append(filtername)
 	#print 'processing', ce, '-->', filtername + '_err'
 	i = allcolumns.index(ce)
-	newvalues = fluxerr * 0.001
+	newvalues = fluxerr * 0.001 * 10**(0.4 * EBVfactor * EBV)
 	newvalues[bad] = -9999
 	newcolumns.append(pyfits.Column(name=filtername + '_err',format='E',array=newvalues, unit='mJy'))
 	#f[1].data[ce] *= 0.001
