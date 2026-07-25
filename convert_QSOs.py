@@ -4,6 +4,8 @@ import numpy as np
 import sys
 from astropy.table import Table
 
+MIN_LOG_L5100 = 45.0
+
 def ab_flux(ABmag):
     """convert AB magnitude to flux in mJy"""
     return (10**(23-(((ABmag)+48.6)/2.5))) * 1000
@@ -36,8 +38,14 @@ dataQ["IRAC2"], dataQ["IRAC2_err"] = convert_flux_and_err_where_measured(dataQ['
 # keep only those with some data in NIR and MIR
 has_NIR = np.logical_or(dataQ["J_2mass_err"]>0, np.logical_or(dataQ["H_2mass_err"]>0, dataQ["Ks_2mass_err"]>0))
 has_MIR = np.logical_or(dataQ["IRAC1_err"]>0, dataQ["IRAC2_err"]>0)
+log_l5100 = np.asarray(np.ma.filled(dataQ["logL5100"], np.nan), dtype=float)
+# Keep unmeasured sources; apply the lower limit only where L5100 is available.
+passes_l5100_cut = ~np.isfinite(log_l5100) | (log_l5100 > MIN_LOG_L5100)
 print("Quasar with NIR:", has_NIR.sum())
 print("Quasar with MIR:", has_MIR.sum())
 print("Quasar with NIR+MIR:", np.logical_and(has_NIR, has_MIR).sum())
+print(f"Quasar with missing logL5100 or logL5100 > {MIN_LOG_L5100:g}:", passes_l5100_cut.sum())
 
-dataQ[np.logical_and(has_NIR, has_MIR)].write(sys.argv[2], overwrite=True)
+selection = has_NIR & has_MIR & passes_l5100_cut
+print("Quasar with NIR+MIR and luminosity cut:", selection.sum())
+dataQ[selection].write(sys.argv[2], overwrite=True)
