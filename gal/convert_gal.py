@@ -63,6 +63,16 @@ else:
 	print('cutting these away, so we have blended sources only ...')
 	f[1].data = f[1].data[~isolated_mask]
 
+# The copied MASS/SFR columns are LePhare fits at the photo-z, but the chimeras use
+# the spec-z. Where the photo-z is catastrophically wrong (mostly far too low), the
+# "true" mass can be off by more than a dex, so keep only hosts whose photo-z agrees
+# with the spec-z. Set MAX_PHOTOZ_DZ=inf to disable.
+max_photoz_dz = float(os.environ.get('MAX_PHOTOZ_DZ', '0.15'))
+photoz_dz = numpy.abs(f[1].data['PHOTOZ'] - f[1].data['zs']) / (1 + f[1].data['zs'])
+photoz_ok = photoz_dz < max_photoz_dz
+print('%d have |PHOTOZ - zs|/(1+zs) < %g (photo-z masses consistent with the spec-z)' % (photoz_ok.sum(), max_photoz_dz))
+f[1].data = f[1].data[photoz_ok]
+
 print('%d: final sample' % len(f[1].data))
 
 # look at flux columns (FLUX in name, APER3)
@@ -164,7 +174,7 @@ col = f[1].data.columns[i]
 info_columns.append(pyfits.Column(name='id',format=col.format,array=col.array))
 info_columns.append(pyfits.Column(name='redshift',format='E',array=zcol))
 
-copy_columns = ['ALPHA_J2000', 'DELTA_J2000', 'MODEL', 'AGE', 'EXTINCTION', 'L_NU', 'L_R', 'L_K']
+copy_columns = ['ALPHA_J2000', 'DELTA_J2000', 'PHOTOZ', 'MODEL', 'AGE', 'EXTINCTION', 'L_NU', 'L_R', 'L_K']
 for param in 'MASS', 'SFR', 'SSFR':
     copy_columns += [param + '_BEST', param + '_MED', param + '_MED_MIN68', param + '_MED_MAX68']
 
