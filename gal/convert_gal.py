@@ -65,13 +65,13 @@ else:
 
 # The copied MASS/SFR columns are LePhare fits at the photo-z, but the chimeras use
 # the spec-z. Where the photo-z is catastrophically wrong (mostly far too low), the
-# "true" mass can be off by more than a dex, so keep only hosts whose photo-z agrees
-# with the spec-z. Set MAX_PHOTOZ_DZ=inf to disable.
+# "true" mass at the spec-z can be off by more than a dex. Flag these hosts
+# (PHOTOZ_DZ, PHOTOZ_OK) instead of dropping them, so that spec-z users can cut on the
+# flag and photo-z fits can still be tested. MAX_PHOTOZ_DZ sets the flag threshold.
 max_photoz_dz = float(os.environ.get('MAX_PHOTOZ_DZ', '0.15'))
 photoz_dz = numpy.abs(f[1].data['PHOTOZ'] - f[1].data['zs']) / (1 + f[1].data['zs'])
 photoz_ok = photoz_dz < max_photoz_dz
-print('%d have |PHOTOZ - zs|/(1+zs) < %g (photo-z masses consistent with the spec-z)' % (photoz_ok.sum(), max_photoz_dz))
-f[1].data = f[1].data[photoz_ok]
+print('%d have |PHOTOZ - zs|/(1+zs) < %g (PHOTOZ_OK: photo-z masses consistent with the spec-z)' % (photoz_ok.sum(), max_photoz_dz))
 
 print('%d: final sample' % len(f[1].data))
 
@@ -182,6 +182,8 @@ for colname in copy_columns:
 	i = allcolumns.index(colname)
 	col = f[1].data.columns[i]
 	info_columns.append(pyfits.Column(name=col.name,format=col.format,array=col.array))
+info_columns.append(pyfits.Column(name='PHOTOZ_DZ',format='E',array=photoz_dz))
+info_columns.append(pyfits.Column(name='PHOTOZ_OK',format='L',array=photoz_ok))
 
 print(', '.join(filternames))
 
