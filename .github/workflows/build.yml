@@ -1,0 +1,74 @@
+name: Build
+
+# Runs the full `make` (galaxy sample, quasar fluxes, chimera combinations,
+# deduplication and the final GRAHSP/CIGALE/fullinfo tables) and checks that
+# each output table is non-empty. stilts and `topcat -stilts` are provided by
+# the stilts jar.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install stilts
+        run: |
+          mkdir -p "$HOME/bin"
+          curl --fail --location --retry 3 -o "$HOME/bin/stilts.jar" https://www.star.bris.ac.uk/~mbt/stilts/stilts.jar
+          printf '#!/bin/sh\nexec java -jar "%s/bin/stilts.jar" "$@"\n' "$HOME" > "$HOME/bin/stilts"
+          # The Makefiles call `topcat -stilts <task>`, which is the same as `stilts <task>`.
+          printf '#!/bin/sh\n[ "$1" = -stilts ] && shift\nexec java -jar "%s/bin/stilts.jar" "$@"\n' "$HOME" > "$HOME/bin/topcat"
+          chmod +x "$HOME/bin/stilts" "$HOME/bin/topcat"
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+
+      - name: Restore the Shen et al. (2011) quasar catalog
+        uses: actions/cache@v4
+        with:
+          path: QSO-orig.fits
+          key: shen11-dr7-qso-catalog-v1
+
+      - name: Build
+        env:
+          MPLBACKEND: Agg
+        run: make
+
+      - name: Check outputs
+        run: |
+          python - <<'PY'
+          from astropy.table import Table
+          for fn in ["gal/input.fits", "gal/input-cigale.fits", "input-gal_converted.fits", "QSO-fluxes.fits",
+                     "chimeras-deduplicated.fits", "chimeras-grahsp.fits", "chimeras-cigale.fits", "chimeras-fullinfo.fits"]:
+              t = Table.read(fn)
+              print(f"{fn}: {len(t)} rows, {len(t.colnames)} columns")
+              assert len(t) > 0, fn
+          PY
+
+      - name: Upload the chimera tables
+        uses: actions/upload-artifact@v4
+        with:
+          name: chimeras
+          path: |
+            chimeras-grahsp.fits
+            chimeras-cigale.fits
+            chimeras-fullinfo.fits
+            *.pdf
