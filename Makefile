@@ -8,14 +8,27 @@
 #      for each COSMOS galaxy and SDSS quasar, builds all possible chimeras
 #   resample.py
 #      deduplicates based on similar colors and redshifts
+#
+# chimera spectra (run: $ make spectra; needs network access and the sparclclient and
+# extinction python packages):
+#   fetch_galaxy_spectra.py  flux-calibrated host spectra from DESI DR1 and LEGA-C
+#   fetch_qso_spectra.py     SDSS DR7 spectra of the paired quasars
+#   build_chimera_spectra.py dereddens, scales each component to its photometry,
+#      moves the quasar to the host redshift, convolves to a common resolving power
+#      (CHIMERA_SPECTRA_R, default 1500) and adds them with the chimera weight
   
 
 all: chimeras-grahsp.fits chimeras-cigale.fits chimeras-fullinfo.fits
 
+spectra: chimeras-spectra.fits
+
 clean:
 	rm -rf input-gal_fulldata.fits input-gal_converted.fits QSO-fluxes.fits chimeras-list.txt chimeras-*.fits  chimeras/*
 
-.PHONY: clean all
+clean-spectra:
+	rm -rf galaxy-spectra.fits qso-spectra.fits chimeras-spectra.fits chimeras-spectra/ spectra/
+
+.PHONY: clean clean-spectra all spectra
 .SECONDARY:
 .SUFFIXES:
 
@@ -88,3 +101,15 @@ chimeras-cigale.fits: chimeras-grahsp.fits
 		cmd='colmeta -name "2mass.H_err" H_2mass_err' \
 		cmd='colmeta -name "2mass.Ks_err" Ks_2mass_err' \
 		cmd='sort redshift'
+
+galaxy-spectra.fits: fetch_galaxy_spectra.py chimeras-fullinfo.fits
+	# find flux-calibrated spectra of the chimera hosts (downloads into spectra/gal/)
+	python3 $^ $@
+
+qso-spectra.fits: fetch_qso_spectra.py chimeras-fullinfo.fits galaxy-spectra.fits
+	# download the SDSS spectra of the quasars paired with those hosts (into spectra/qso/)
+	python3 $^ $@
+
+chimeras-spectra.fits: build_chimera_spectra.py chimeras-fullinfo.fits gal/test_mass_onlygal_extragal.fits galaxy-spectra.fits qso-spectra.fits
+	# build the composite spectra (into chimeras-spectra/)
+	python3 $^ $@
