@@ -62,11 +62,15 @@ chimeras-fullQinfo.fits: chimeras-deduplicated.fits QSO-fluxes.fits
 		in2=QSO-fluxes.fits values2=SDSS suffix2='_QSO' \
 		ocmd='delcols "GroupSize GroupID"'
 
-chimeras-fullinfo.fits: chimeras-fullQinfo.fits input-gal_converted.fits
+chimeras-fullinfo-base.fits: chimeras-fullQinfo.fits input-gal_converted.fits
 	stilts tmatch2 out=$@ matcher=exact find=best1 join=all1 fixcols=all \
 		in1=chimeras-fullQinfo.fits values1=ID_COSMOS suffix1= \
 		in2=input-gal_converted.fits values2=id suffix2=_GAL \
 		ocmd='delcols "GroupSize GroupID"'
+
+chimeras-fullinfo.fits: add_host_contamination.py chimeras-fullinfo-base.fits
+	# estimate the quasar host light added to each COSMOS galaxy
+	python3 $^ $@
 
 chimeras-grahsp.fits: chimeras-deduplicated.fits
 	cp $^ $@
