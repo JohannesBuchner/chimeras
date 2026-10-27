@@ -44,6 +44,8 @@ for row in tqdm.tqdm(dataC):
     sel = np.logical_and(np.logical_and(m, r), ex)
     red = offs[sel]
     if len(red) > 0:
+        # one matching model; take its row so the deltas below are scalars
+        red = red[0]
         # convert filter system from SUBARU to SDSS with model
         for band in 'z', 'i', 'r':
             model_mag_delta = red[band + '_sdss'] - red['SUBARU_' + band]

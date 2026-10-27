@@ -1,0 +1,7 @@
+numpy
+astropy
+matplotlib
+tqdm
+joblib
+getdist
+corner
